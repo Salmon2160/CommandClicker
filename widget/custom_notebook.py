@@ -15,17 +15,54 @@ except ImportError:  # Python 3
 
 DEFAULT_FONT=("", 12)
 TAB_MAX_NUM = 6
+
+class CustomTabToplevel(tk.Toplevel):
+    def __init__(self, master,tab_index, tab_name, pos):
+        self.master = master
+        super().__init__(master=master)
+        self.overrideredirect(True)         # ウィンドウ枠を削除
+        self.wm_attributes("-alpha", 0.75)  # ウィンドウを半透明
+        self.attributes("-topmost", True)
+        self.tab_index = tab_index
+        self.tab_name = tab_name
+        
+        # タブ
+        label = ttk.Label(
+            self,
+            text=tab_name,
+            font=DEFAULT_FONT,
+            padding =(15, 6),
+            borderwidth = 20,
+            relief="solid",
+        )
+        label.grid(column=0, row=0, sticky=(tk.N, tk.S, tk.W, tk.E))
+        
+        # 親の位置を元に表示
+        x, y = pos
+        self.offset = (10, 10)
+        x0, y0 = self.offset
+        self.geometry("+{}+{}".format(x - x0, y - y0))
+        
+        # マウスの移動をトラッキング
+        self.move_bind = self.master.bind("<Motion>", self.move_with_mouse, '+')
+        
+    def move_with_mouse(self, event):
+        # マウスの位置を取得し、ウィンドウをその位置に移動
+        self.geometry("+{}+{}".format(event.x_root - self.offset[0], event.y_root - self.offset[1]))
+        
+    def unbind_event(self):
+        self.master.unbind("<Motion>", self.move_bind)
     
 class CustomDialog(simpledialog.Dialog):
-    def __init__(self, parent, title=None, prompt=None):
+    def __init__(self, master, title=None, prompt=None):
         self.prompt = prompt
         self.value = None
-        super().__init__(parent, title=title)
+        super().__init__(master, title=title)
 
-    def body(self, parent):
-        self.label = tk.Label(parent, text=self.prompt, font=DEFAULT_FONT)
+    def body(self, master):
+        self.label = tk.Label(master, text=self.prompt, font=DEFAULT_FONT)
         self.label.pack()
-        self.entry = tk.Entry(parent, font=DEFAULT_FONT)
+        self.entry = tk.Entry(master, font=DEFAULT_FONT)
         self.entry.pack()
 
     def apply(self):
@@ -49,10 +86,11 @@ class CustomNotebook(ttk.Notebook):
         ttk.Notebook.__init__(self, *args, **kwargs)
 
         self._active = None
+        self.drag_tab = None
 
         self.bind("<ButtonPress-1>", self.on_close_press, True)
         self.bind("<ButtonRelease-1>", self.on_close_release)
-        self.bind("<Motion>", self.on_close_motion)
+        self.bind("<Motion>", self.on_close_motion, True)
         
         self.bind("<ButtonRelease-3>", self.on_tab_release)
         
@@ -120,7 +158,10 @@ class CustomNotebook(ttk.Notebook):
         tab_name = "タブ {}".format(tab_index)
         self.master.master.add_tab_config(tab_index, tab_name)
         tab_frm = self.master.master.make_tab_frm(tab_index)
-        self.insert(tab_index, tab_frm, text=tab_name)
+        if tab_count == tab_index:
+            self.add(tab_frm, text=tab_name, padding=5)
+        else:
+            self.insert(tab_index, tab_frm, text=tab_name, padding=5)
     
     def press_menu(self, tab_index, label):        
         def _press_menu():
@@ -156,10 +197,45 @@ class CustomNotebook(ttk.Notebook):
             self.state(['hover'])
             self._active = index
             return "break"
+        else:
+            # タブ移動（ドラッグ）
+            try:
+                index = self.index("@%d,%d" % (event.x, event.y))
+            except:
+                return
+            tab_name = self.tab(index)["text"]
+            
+            x = int(self.master.winfo_rootx() + event.x)
+            y = int(self.master.winfo_rooty() + event.y)
+            self.drag_tab = CustomTabToplevel(self, index, tab_name, (x, y))
 
     def on_close_release(self, event):
         """Called when the button is released"""
-        
+        if self.drag_tab is not None:
+            # タブ移動（ドロップ）
+            source_index = self.drag_tab.tab_index
+            source_name = self.drag_tab.tab_name
+            
+            # ドラッグ機能をオフ
+            self.drag_tab.unbind_event()
+            self.drag_tab.destroy()
+            self.drag_tab = None
+            
+            # 巻き込まれてunbindされるので再登録
+            self.bind("<Motion>", self.on_close_motion, True)
+            try:
+                target_index = self.index("@%d,%d" % (event.x, event.y))
+            except:
+                return
+            
+            if target_index == source_index:
+                return
+
+            source_tab = self.nametowidget(self.tabs()[source_index])
+            self.insert(target_index, source_tab,  text=source_name, padding=5)
+            self.master.master.insert_tab_congig(source_index, target_index)
+            return
+    
         if not self.instate(['pressed']) and not self.instate(['hover']):
             return
         
@@ -177,10 +253,10 @@ class CustomNotebook(ttk.Notebook):
             self.state(['!hover'])
             return
 
-        index = self.index("@%d,%d" % (event.x, event.y))
+        target_index = self.index("@%d,%d" % (event.x, event.y))
 
-        if self._active == index:
-            self.remove_tab(index)
+        if self._active == target_index:
+            self.remove_tab(target_index)
 
         self.state(["!pressed"])
         self.state(['!hover'])

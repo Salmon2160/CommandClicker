@@ -147,10 +147,24 @@ class main_frm(Frame):
         self.config["data"].pop(tab_idx)
         self.save_config()
         
-    def add_tab_config(self, tab_idx, tab_name):
+    def add_tab_config(self, tab_idx, tab_name, tab_data = None):
         self.config["tab_num"] += 1
-        tab_data = init_tab_config(self.config["btn_size"], tab_name)
+        if tab_data is None:
+            tab_data = init_tab_config(self.config["btn_size"], tab_name)
         self.config["data"].insert(tab_idx, tab_data)
+        self.save_config()
+     
+    def insert_tab_congig(self, from_idx, to_idx):
+        if from_idx == to_idx:
+            return
+
+        data = self.config["data"]
+        if from_idx < to_idx:
+            data.insert(to_idx + 1, data[from_idx])
+            data.pop(from_idx)
+        else:
+            data.insert(to_idx, data[from_idx])
+            data.pop(from_idx + 1)
         self.save_config()
         
 class CustomButton(Button):
