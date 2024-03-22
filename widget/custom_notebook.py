@@ -169,12 +169,14 @@ class CustomNotebook(ttk.Notebook):
             ).value
         if new_name:
             self.tab(tab_index, text=new_name)
-            self.master.master.rename_tab_config(tab_index, new_name)
+            self.master.master.set_tab_data(tab_index, tab_name = new_name)
+            self.master.master.save_config()
                     
     def remove_tab(self, tab_index):
         self.forget(tab_index)
         self.event_generate("<<NotebookTabClosed>>")
-        self.master.master.remove_tab_config(tab_index)
+        self.master.master.remove_tab(tab_index)
+        self.master.master.save_config()
 
     def add_tab(self, tab_index):
         tab_count = self.index("end")
@@ -182,8 +184,9 @@ class CustomNotebook(ttk.Notebook):
             return
         
         tab_name = "タブ {}".format(tab_index)
-        self.master.master.add_tab_config(tab_index, tab_name)
-        tab_frm = self.master.master.make_tab_frm(tab_index)
+        self.master.master.add_tab(tab_index, tab_name)
+        self.master.master.save_config()
+        tab_frm = self.master.master.get_tab(tab_index)
         if tab_count == tab_index:
             self.add(tab_frm, text=tab_name, padding=5)
         else:
@@ -201,7 +204,8 @@ class CustomNotebook(ttk.Notebook):
                 tab_data = self.master.master.get_clipboard_tab_data()
                 self.master.master.get_tab(tab_index).update_tab_data(tab_data)
                 self.tab(tab_index, text=tab_data["name"])
-                self.master.master.rename_tab_config(tab_index, tab_data["name"])
+                self.master.master.set_tab_data(tab_index, tab_name = tab_data["name"])
+                self.master.master.save_config()
                 
             elif label == self.tab_remove_key:
                 result = messagebox.askyesnocancel("Confirmation", "タグを削除しますが、よろしいでしょうか？")
@@ -275,7 +279,8 @@ class CustomNotebook(ttk.Notebook):
 
             source_tab = self.nametowidget(self.tabs()[source_index])
             self.insert(target_index, source_tab,  text=source_name, padding=5)
-            self.master.master.insert_tab_congig(source_index, target_index)
+            self.master.master.insert_tab(source_index, target_index)
+            self.master.master.save_config()
             return
     
         if not self.instate(['pressed']) and not self.instate(['hover']):

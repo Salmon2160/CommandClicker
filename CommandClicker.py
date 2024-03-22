@@ -149,23 +149,25 @@ class main_frm(Frame):
     def save_config(self):
         SaveYaml(CONFIG_FILENAME, self.config)
         
-    def rename_tab_config(self, tab_idx, tab_name):
-        self.config["data"][tab_idx]["name"] = tab_name
-        self.save_config()
+    def set_tab_data(self, tab_idx, tab_name = None, btn_list = None):
+        if tab_name is not None:
+            self.config["data"][tab_idx]["name"] = tab_name
+        if btn_list is not None:
+            self.config["data"][tab_idx]["btn_list"] = btn_list
         
-    def remove_tab_config(self, tab_idx):
+    def remove_tab(self, tab_idx):
         self.config["tab_num"] -= 1
         self.config["data"].pop(tab_idx)
-        self.save_config()
+        self.tab_list.pop(tab_idx)
         
-    def add_tab_config(self, tab_idx, tab_name, tab_data = None):
+    def add_tab(self, tab_idx, tab_name, tab_data = None):
         self.config["tab_num"] += 1
         if tab_data is None:
             tab_data = init_tab_config(self.config["btn_size"], tab_name)
         self.config["data"].insert(tab_idx, tab_data)
-        self.save_config()
+        self.tab_list.insert(tab_idx, self.make_tab_frm(tab_idx))
      
-    def insert_tab_congig(self, from_idx, to_idx):
+    def insert_tab(self, from_idx, to_idx):
         if from_idx == to_idx:
             return
 
@@ -173,10 +175,15 @@ class main_frm(Frame):
         if from_idx < to_idx:
             data.insert(to_idx + 1, data[from_idx])
             data.pop(from_idx)
+            
+            self.tab_list.insert(to_idx + 1, self.tab_list[from_idx])
+            self.tab_list.pop(from_idx)
         else:
             data.insert(to_idx, data[from_idx])
             data.pop(from_idx + 1)
-        self.save_config()
+            
+            self.tab_list.insert(to_idx, self.tab_list[from_idx])
+            self.tab_list.pop(from_idx + 1)
         
     def is_valid_clipboard_btn_data(self):
         return self.clipboard_btn_data is not None
