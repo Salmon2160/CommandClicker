@@ -159,6 +159,7 @@ class main_frm(Frame):
         self.config["tab_num"] -= 1
         self.config["data"].pop(tab_idx)
         self.tab_list.pop(tab_idx)
+        self.update_tab_id()
         
     def add_tab(self, tab_idx, tab_name, tab_data = None):
         self.config["tab_num"] += 1
@@ -166,6 +167,7 @@ class main_frm(Frame):
             tab_data = init_tab_config(self.config["btn_size"], tab_name)
         self.config["data"].insert(tab_idx, tab_data)
         self.tab_list.insert(tab_idx, self.make_tab_frm(tab_idx))
+        self.update_tab_id()
      
     def insert_tab(self, from_idx, to_idx):
         if from_idx == to_idx:
@@ -184,6 +186,7 @@ class main_frm(Frame):
             
             self.tab_list.insert(to_idx, self.tab_list[from_idx])
             self.tab_list.pop(from_idx + 1)
+        self.update_tab_id()
         
     def is_valid_clipboard_btn_data(self):
         return self.clipboard_btn_data is not None
@@ -205,6 +208,10 @@ class main_frm(Frame):
         
     def get_tab(self, tab_id):
         return self.tab_list[tab_id]
+    
+    def update_tab_id(self):
+        for idx, tab in enumerate(self.tab_list):
+            tab.id = idx            
         
 class CustomButton(Button):
     def __init__(self, master=None, id=None, **kwargs):
