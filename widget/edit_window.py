@@ -29,6 +29,16 @@ class edit_window(Toplevel):
 
     def make_widget(self):
         def _on_closing():  # ウィンドウの右上の✖アイコンから閉じるときの処理（ウィンドウを閉じる処理を書き換える）
+            if self.is_change_entry():
+                # 保存するかどうかの確認ダイアログを表示
+                response = messagebox.askyesnocancel("Confirmation", "変更内容を保存しますか？")
+                if response is True:
+                    self.save_entry()
+                elif response is False:
+                    pass
+                else:
+                    return
+            
             self.destroy()
         self.protocol("WM_DELETE_WINDOW", _on_closing)  # ウィンドウを閉じる処理を書き換える
         
@@ -84,8 +94,12 @@ class edit_window(Toplevel):
             height=10,
             width=40,
         )
-        for idx, cmd in enumerate(self.edit_data["cmd"]):
-            self.btn_cmd_entry.insert(END, cmd + "\n")
+        self.btn_cmd_entry.delete("1.0", "end")
+        cmd_list = self.edit_data["cmd"]
+        
+        # コマンド内容をロード（最後の挿入のみ、改行コードを省略）
+        for idx, cmd in enumerate(cmd_list):
+            self.btn_cmd_entry.insert(END, cmd + "\n" if idx != len(cmd_list) - 1 else cmd)
         self.btn_cmd_entry.grid(column=0, row=2, columnspan = 2, sticky=(W, E))
 
         btn_frm = Frame(
@@ -123,29 +137,40 @@ class edit_window(Toplevel):
 
     # 保存ボタンの処理
     def exec_save(self):
-        name = self.btn_name_entry.get()
-        
-        is_change = False
-        if name != self.edit_data["name"]:
-            self.edit_btn["text"] = name
-            self.edit_data["name"] = name
-            is_change = True
-        
-        cmd_list = self.btn_cmd_entry.get("1.0", "end").split("\n")
-        
-        if not lists_match(cmd_list, self.edit_data["cmd"]):
-            self.edit_data["cmd"] = cmd_list
-            is_change = True
-            
-        if self.checkbox_var.get() != self.edit_data["exec_type"]:
-            self.edit_data["exec_type"] = self.checkbox_var.get()
-            is_change = True
-        
         # 保存
-        if is_change:   
-            self.master.master.master.master.save_config()
+        if self.is_change_entry():
+            self.save_entry()
             
         self.destroy() # ウィンドウの削除
+        
+    def save_entry(self):
+        name = self.btn_name_entry.get()
+        self.edit_btn["text"] = name
+        self.edit_data["name"] = name
+        self.edit_data["cmd"] = self.get_cmd_entry()
+        self.edit_data["exec_type"] = self.checkbox_var.get()
+        
+        self.master.master.master.master.save_config()
+        
+    def is_change_entry(self):
+        if self.btn_name_entry.get() != self.edit_data["name"]:
+            return True
+            
+        if not lists_match(self.get_cmd_entry(), self.edit_data["cmd"]):
+            return True
+            
+        if self.checkbox_var.get() != self.edit_data["exec_type"]:
+            return True
+        
+        return False
+
+    def get_cmd_entry(self):
+        cmd_list = self.btn_cmd_entry.get("1.0", "end").split("\n")
+        
+        # 末尾が改行コードの場合は無視
+        if cmd_list[-1] == "":
+            cmd_list.pop()
+        return cmd_list
         
     def exec_cmd_bind(self,event):
         return self.exec_cmd()

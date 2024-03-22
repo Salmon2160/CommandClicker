@@ -20,7 +20,7 @@ DEFAULT_FONT=("", 12)
 BACKUP_FOLDER = "backup"
 CONFIG_FILENAME = "config.yaml"
 DEFOULT_CONFIG = (6, 5, 6)
-# DEFOULT_CONFIG = (4, 3, 3)
+DEFOULT_CONFIG = (6, 4, 4)
 
 def init_tab_config(size, tab_name):
     width, height = size
@@ -31,7 +31,7 @@ def init_tab_config(size, tab_name):
         for x in range(width):
             btn_data = {}
             btn_data["name"] = 'コマンド {}'.format(width * y + x)
-            btn_data["cmd"] = []
+            btn_data["cmd"] = [""]
             btn_data["exec_type"] = False
             tab_data["btn_list"].append(btn_data)
     return tab_data
