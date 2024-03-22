@@ -22,7 +22,7 @@ class CustomTabToplevel(tk.Toplevel):
         super().__init__(master=master)
         self.overrideredirect(True)         # ウィンドウ枠を削除
         self.wm_attributes("-alpha", 0.75)  # ウィンドウを半透明
-        self.attributes("-topmost", True)
+        self.attributes("-topmost", True)   # ウィンドウを最前面
         self.tab_index = tab_index
         self.tab_name = tab_name
         
@@ -87,6 +87,8 @@ class CustomNotebook(ttk.Notebook):
 
         self._active = None
         self.drag_tab = None
+        
+        self.pmenu = None
 
         self.bind("<ButtonPress-1>", self.on_close_press, True)
         self.bind("<ButtonRelease-1>", self.on_close_release)
@@ -104,6 +106,9 @@ class CustomNotebook(ttk.Notebook):
         self.make_menu(event, index)
         
     def make_menu(self, event, tab_index):
+        # ドラッグ中の場合、ドラッグを無効
+        self.reset_drag()
+
         # タブメニューを表示
         pmenu = tk.Menu(self, tearoff=0)
         
@@ -113,6 +118,24 @@ class CustomNotebook(ttk.Notebook):
             command=self.press_menu(tab_index, self.tab_rename_key),
             font=DEFAULT_FONT,
             )
+        
+        self.tab_copy_key = "タブをコピー"
+        pmenu.add_command(
+            label=self.tab_copy_key,
+            command=self.press_menu(tab_index, self.tab_copy_key),
+            font=DEFAULT_FONT,
+            )
+        
+        self.tab_paste_key = "タブを貼り付け"
+        pmenu.add_command(
+            label=self.tab_paste_key,
+            command=self.press_menu(tab_index, self.tab_paste_key),
+            font=DEFAULT_FONT,
+            )
+        if not self.master.master.is_valid_clipboard_tab_data():
+            pmenu.entryconfig(self.tab_paste_key, state="disabled")
+        
+        pmenu.add_separator()
         
         self.tab_add_key = "タブを追加"
         pmenu.add_command(
@@ -128,12 +151,15 @@ class CustomNotebook(ttk.Notebook):
             font=DEFAULT_FONT,
             )
         
+        pmenu.add_separator()
         pmenu.add_command(
             label="閉じる",
             font=DEFAULT_FONT,
             )
         x, y = event.x_root, event.y_root
         pmenu.post(x, y)
+        
+        self.pmenu = pmenu
         
     def rename_tab(self, tab_index):
         new_name = CustomDialog(
@@ -167,6 +193,16 @@ class CustomNotebook(ttk.Notebook):
         def _press_menu():
             if label == self.tab_rename_key:
                 self.rename_tab(tab_index)
+            elif label == self.tab_copy_key:
+                self.master.master.set_clipboard_tab_data(tab_index)
+            elif label == self.tab_paste_key:
+                if not self.master.master.is_valid_clipboard_tab_data():
+                    return
+                tab_data = self.master.master.get_clipboard_tab_data()
+                self.master.master.get_tab(tab_index).update_tab_data(tab_data)
+                self.tab(tab_index, text=tab_data["name"])
+                self.master.master.rename_tab_config(tab_index, tab_data["name"])
+                
             elif label == self.tab_remove_key:
                 result = messagebox.askyesnocancel("Confirmation", "タグを削除しますが、よろしいでしょうか？")
                 if not result:
@@ -208,6 +244,16 @@ class CustomNotebook(ttk.Notebook):
             x = int(self.master.winfo_rootx() + event.x)
             y = int(self.master.winfo_rooty() + event.y)
             self.drag_tab = CustomTabToplevel(self, index, tab_name, (x, y))
+            
+    def reset_drag(self):
+        if self.drag_tab is None:
+            return
+        self.drag_tab.unbind_event()
+        self.drag_tab.destroy()
+        self.drag_tab = None
+        
+        # 巻き込まれてunbindされるので再登録
+        self.bind("<Motion>", self.on_close_motion, True)
 
     def on_close_release(self, event):
         """Called when the button is released"""
@@ -217,12 +263,8 @@ class CustomNotebook(ttk.Notebook):
             source_name = self.drag_tab.tab_name
             
             # ドラッグ機能をオフ
-            self.drag_tab.unbind_event()
-            self.drag_tab.destroy()
-            self.drag_tab = None
+            self.reset_drag()
             
-            # 巻き込まれてunbindされるので再登録
-            self.bind("<Motion>", self.on_close_motion, True)
             try:
                 target_index = self.index("@%d,%d" % (event.x, event.y))
             except:
@@ -242,20 +284,18 @@ class CustomNotebook(ttk.Notebook):
         if self.index("end") <= 1:
             return
 
-        result = messagebox.askyesnocancel("Confirmation", "タグを削除しますが、よろしいでしょうか？")
-        if not result:
-            return
-
         element =  self.identify(event.x, event.y)
         if "close" not in element:
             # user moved the mouse off of the close button
             self.state(['!pressed'])
             self.state(['!hover'])
             return
-
+        
         target_index = self.index("@%d,%d" % (event.x, event.y))
-
         if self._active == target_index:
+            result = messagebox.askyesnocancel("Confirmation", "タグを削除しますが、よろしいでしょうか？")
+            if not result:
+                return
             self.remove_tab(target_index)
 
         self.state(["!pressed"])

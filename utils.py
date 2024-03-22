@@ -1,5 +1,6 @@
 import os
 import yaml
+import datetime
 from shlex import quote
 import copy
 import subprocess
@@ -70,3 +71,8 @@ def is_valid_release(event):
 
     x, y = event.x_root, event.y_root
     return (x1 <= x <= x2) and (y1 <= y <= y2)
+
+def get_current_datetime_string():
+    now = datetime.datetime.now()
+    formatted_datetime = now.strftime("%Y_%m_%d_%S")
+    return formatted_datetime
