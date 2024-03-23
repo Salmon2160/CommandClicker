@@ -68,19 +68,58 @@ def init_config(tab_num, size):
         config["data"].append(tab_data)
     return config
 
+def is_valid_size(config):
+    tab_num = config["tab_num"]
+    w, h = config["btn_size"]
+    data = config["data"]
+    
+    if tab_num <= 0:
+        return False
+    
+    if w * h <= 0:
+        return False
+    
+    if type(data) != list:
+        return False
+    
+    if len(data) == 0:
+        return False
+    
+    for tab_idx in range(len(data)):
+        if len(data[tab_idx]["btn_list"]) == 0:
+            return False
+    
+    return True
+
 def is_valid_config(config):
     tab_num = config["tab_num"]
     w, h = config["btn_size"]
     data = config["data"]
     
-    if tab_num != len(data):
+    if len(data) > tab_num:
         return False
-    
-    for tab_idx in range(tab_num):
+
+    for tab_idx in range(len(data)):
         if len(data[tab_idx]["btn_list"]) != w * h:
             return False
     
     return True
+
+def reshape_config(config):
+    tab_num = config["tab_num"]
+    w, h = config["btn_size"]
+    btn_num = w * h
+    
+    cur_tab_num = len(config["data"])
+    
+    reshape_config = init_config(tab_num, (w, h))
+    for tab_idx in range(min(tab_num, cur_tab_num)):
+        reshape_config["data"][tab_idx]["name"] = config["data"][tab_idx]["name"]
+        
+        cur_btn_num = len(config["data"][tab_idx]["btn_list"])
+        for btn_idx in range(min(btn_num, cur_btn_num)):
+            reshape_config["data"][tab_idx]["btn_list"][btn_idx] = config["data"][tab_idx]["btn_list"][btn_idx]
+    return reshape_config
 
 class MainWindow(Tk):
     def __init__(self):
@@ -138,20 +177,26 @@ class main_frm(Frame):
             time_str = get_current_datetime_string()
             backup_path = os.path.join(BACKUP_FOLDER, time_str+ "_" + CONFIG_FILENAME)
             SaveYaml(backup_path, self.config)
-            
-        if not is_exist_config or not is_valid_config(self.config):
+        
+        # 設定ファイルがない又は、設定ファイルのサイズ設定が不正の場合は新規作成
+        if not is_exist_config or not is_valid_size(self.config):
             tab_num, width, height = DEFOULT_CONFIG
             self.config = init_config(tab_num, (width, height))
+            SaveYaml(CONFIG_FILENAME, self.config)
+            
+        if not is_valid_config(self.config):
+            self.config = reshape_config(self.config)
             SaveYaml(CONFIG_FILENAME, self.config)
 
         self.base_tab = CustomNotebook(
             self.base_frm,
-            image_size = (9, 9)
+            image_size = (9, 9),
+            tab_num = self.config["tab_num"]
             )
         self.base_tab.grid(column=0, row=0, sticky=(N, S, W, E))
         
         self.tab_list = []
-        for idx in range(self.config["tab_num"]):
+        for idx in range(len(self.config["data"])):
             tab = self.make_tab_frm(idx)
             tab.grid(column=0, row=0, sticky=(N, S, W, E))
             
@@ -176,13 +221,11 @@ class main_frm(Frame):
             self.config["data"][tab_idx]["btn_list"] = btn_list
         
     def remove_tab(self, tab_idx):
-        self.config["tab_num"] -= 1
         self.config["data"].pop(tab_idx)
         self.tab_list.pop(tab_idx)
         self.update_tab_id()
         
     def add_tab(self, tab_idx, tab_name, tab_data = None):
-        self.config["tab_num"] += 1
         if tab_data is None:
             tab_data = init_tab_config(self.config["btn_size"], tab_name)
         self.config["data"].insert(tab_idx, tab_data)

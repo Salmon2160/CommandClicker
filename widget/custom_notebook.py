@@ -14,7 +14,6 @@ except ImportError:  # Python 3
     from tkinter.simpledialog import askstring
 
 DEFAULT_FONT=("", 12)
-TAB_MAX_NUM = 6
 
 class CustomTabToplevel(tk.Toplevel):
     def __init__(self, master,tab_index, tab_name, pos):
@@ -77,6 +76,9 @@ class CustomNotebook(ttk.Notebook):
         self.image_size = (7, 7)
         if "image_size" in kwargs.keys():
             self.image_size = kwargs.pop('image_size')
+            
+        if "tab_num" in kwargs.keys():
+            self.tab_num = kwargs.pop('tab_num')
 
         if not self.__initialized:
             self.__initialize_custom_style()
@@ -180,7 +182,7 @@ class CustomNotebook(ttk.Notebook):
 
     def add_tab(self, tab_index):
         tab_count = self.index("end")
-        if tab_count >= TAB_MAX_NUM:
+        if tab_count >= self.tab_num:
             return
         
         tab_name = "タブ {}".format(tab_index)
