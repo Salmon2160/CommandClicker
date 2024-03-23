@@ -1,10 +1,10 @@
 import os
 import yaml
 import datetime
-from shlex import quote
+import shlex
 import copy
 import subprocess
-import webbrowser
+from multiprocessing import Process, Array
 
 def lists_match(l1, l2):
     if len(l1) != len(l2):
@@ -35,30 +35,45 @@ def SaveYaml(path, dic):
                 default_flow_style=False,
                 sort_keys=False
                 )
-
+   
 # - encoding = 'utf-8', 'shiftjis'
 def exec_cmd(cmd_list, encoding = 'shiftjis', is_parallel = True):
+    start = "start "
+    prefix = "cmd /c "
+    # prefix = "cmd /k " # for debug
+    suffix = " && "
     
+    exec_list = []
     if not is_parallel:
-        cmd_list = ["&&".join(cmd_list)]
+        # 各命令を「start cmd /c "cmd1 && cmd2 &&..."」の形式に連結
+        cmd = start + prefix
+        args=""
+        arg_num = len(cmd_list)
+        for idx, arg in enumerate(cmd_list):
+            args += arg + suffix if idx != arg_num - 1 else arg
+        cmd += "\"{}\"".format(args)#shlex.quote()
+        exec_list.append(cmd)
+    else:
+        # 各命令を「start cmd /c {cmd}」の形式に整形
+        exec_list = [start + prefix + cmd for cmd in cmd_list]
         
-    for cmd in cmd_list:
-        result = subprocess.Popen(
+    process_list = []
+    for cmd in exec_list:
+        process = subprocess.Popen(
             cmd,
             shell=True,
             encoding=encoding,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             )
-        print("> " + cmd.replace("&&","\n> "))
-        
-        out, err = result.communicate()
-
-        if out is not None and "" != out:
-            print(result.communicate()[0])
-        
-        if err is not None and "" != err:
-            print(result.communicate()[1])
+        process_list.append(process)
+        print("> " + cmd)
+            
+def process_exec_cmd(cmd_list, encoding = 'shiftjis', is_parallel = True):
+    # 子プロセスを途中で終了させたい場合, Arrayによる管理が必要
+    process = Process(target=exec_cmd, args=(cmd_list, encoding, is_parallel))
+    process.start()
+    return process
             
 def is_valid_release(event):
     # ディスプレイ座標系で比較

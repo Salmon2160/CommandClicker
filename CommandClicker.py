@@ -8,7 +8,8 @@ from PIL import Image,ImageTk
 import os
 import sys
 import copy
-from multiprocessing import Process, Array, freeze_support, Manager
+
+from multiprocessing import freeze_support
 
 from widget.custom_notebook import CustomNotebook
 from widget.edit_window import edit_window
@@ -445,7 +446,7 @@ class tab_frm(Frame):
             print("コマンドが登録されていません")
             return
 
-        exec_cmd(cmd_list, is_parallel=self.data[btn_id]["exec_type"])
+        process_exec_cmd(cmd_list, is_parallel=self.data[btn_id]["exec_type"])
             
 def set_window_size(win, size):
     h,w = size
@@ -478,4 +479,6 @@ def main():
     main_win.mainloop()  # メインウィンドウがここで動く
 
 if __name__=="__main__":
+    # pyinstallerとmultiprocessingを併用する場合は以下の関数を初回に呼び出しておく
+    freeze_support()
     main()

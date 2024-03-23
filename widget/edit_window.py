@@ -181,4 +181,4 @@ class edit_window(Toplevel):
         if len(cmd_list) == 0:
             print("コマンドが登録されていません")
             return
-        exec_cmd(cmd_list, is_parallel = self.checkbox_var.get())
+        process_exec_cmd(cmd_list, is_parallel = self.checkbox_var.get())
