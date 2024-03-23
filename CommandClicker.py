@@ -20,8 +20,7 @@ DEFAULT_FONT=("", 12)
 
 BACKUP_FOLDER = "backup"
 CONFIG_FILENAME = "config.yaml"
-DEFOULT_CONFIG = (6, 5, 6)
-DEFOULT_CONFIG = (6, 4, 4)
+DEFAULT_CONFIG = (6, 4, 4)
 
 # メモ
 # 不具合の原因の殆どが各ウィジェットのconfig依存の変数の更新忘れだった。
@@ -180,7 +179,7 @@ class main_frm(Frame):
         
         # 設定ファイルがない又は、設定ファイルのサイズ設定が不正の場合は新規作成
         if not is_exist_config or not is_valid_size(self.config):
-            tab_num, width, height = DEFOULT_CONFIG
+            tab_num, width, height = DEFAULT_CONFIG
             self.config = init_config(tab_num, (width, height))
             SaveYaml(CONFIG_FILENAME, self.config)
             
@@ -347,11 +346,12 @@ class tab_frm(Frame):
                 text=btn_data["name"],
                 font=DEFAULT_FONT,
                 borderwidth = 3,
-                wraplength=150,
-                padx=15,
+                wraplength=120,
+                padx=10,
+                width=11,
                )
                
-               btn.grid(column=x, row=y)
+               btn.grid(column=x, row=y, padx=2, pady=2)
                btn.bind("<ButtonRelease>",self.release_button)
                btn.bind("<Control - Button - 3>",self.start_move_button)
                self.btn_list.append(btn)

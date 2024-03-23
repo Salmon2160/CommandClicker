@@ -210,7 +210,7 @@ class CustomNotebook(ttk.Notebook):
                 self.master.master.save_config()
                 
             elif label == self.tab_remove_key:
-                result = messagebox.askyesnocancel("Confirmation", "タグを削除しますが、よろしいでしょうか？")
+                result = messagebox.askyesnocancel("Confirmation", "タグを削除しますが、よろしいでしょうか？", default = 'no')
                 if not result:
                     return
                 self.remove_tab(tab_index)
@@ -300,7 +300,7 @@ class CustomNotebook(ttk.Notebook):
         
         target_index = self.index("@%d,%d" % (event.x, event.y))
         if self._active == target_index:
-            result = messagebox.askyesnocancel("Confirmation", "タグを削除しますが、よろしいでしょうか？")
+            result = messagebox.askyesnocancel("Confirmation", "タグを削除しますが、よろしいでしょうか？", default = 'no')
             if not result:
                 return
             self.remove_tab(target_index)
