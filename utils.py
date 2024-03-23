@@ -51,11 +51,11 @@ def exec_cmd(cmd_list, encoding = 'shiftjis', is_parallel = True):
         arg_num = len(cmd_list)
         for idx, arg in enumerate(cmd_list):
             args += arg + suffix if idx != arg_num - 1 else arg
-        cmd += "\"{}\"".format(args)#shlex.quote()
+        cmd += "\"{}\"".format(args)
         exec_list.append(cmd)
     else:
         # 各命令を「start cmd /c {cmd}」の形式に整形
-        exec_list = [start + prefix + cmd for cmd in cmd_list]
+        exec_list = [start + prefix + "\"{}\"".format(cmd) for cmd in cmd_list]
         
     process_list = []
     for cmd in exec_list:
