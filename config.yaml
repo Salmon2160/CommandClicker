@@ -11,397 +11,493 @@ data:
     - powershell timeout 5
     - pause
     exec_type: false
+    exec_type2: false
   - name: 並列実行１
     cmd:
     - 'echo 各行が同時に実行 '
     - powershell timeout 5
     - pause
     exec_type: true
+    exec_type2: false
   - name: コマンド 2
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 3
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: 逐次実行２
     cmd:
     - cd ../
     - cd > CommandClicker/sequential.txt
     exec_type: false
+    exec_type2: false
   - name: 並列実行２
     cmd:
     - cd ../
     - cd > parallel.txt && echo dummy command
     exec_type: true
+    exec_type2: false
   - name: コマンド 6
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 7
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 8
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 9
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 10
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 11
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 12
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 13
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 14
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 15
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
 - name: タブ 1
   btn_list:
   - name: コマンド 0
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 1
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 2
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 3
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 4
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 5
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 6
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 7
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 8
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 9
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 10
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 11
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 12
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 13
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 14
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 15
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
 - name: タブ 2
   btn_list:
   - name: コマンド 0
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 1
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 2
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 3
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 4
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 5
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 6
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 7
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 8
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 9
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 10
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 11
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 12
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 13
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 14
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 15
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
 - name: タブ 3
   btn_list:
   - name: コマンド 0
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 1
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 2
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 3
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 4
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 5
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 6
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 7
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 8
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 9
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 10
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 11
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 12
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 13
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 14
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 15
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
 - name: タブ 4
   btn_list:
   - name: コマンド 0
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 1
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 2
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 3
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 4
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 5
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 6
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 7
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 8
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 9
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 10
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 11
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 12
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 13
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 14
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 15
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
 - name: タブ 5
   btn_list:
   - name: コマンド 0
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 1
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 2
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 3
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 4
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 5
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 6
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 7
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 8
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 9
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 10
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 11
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 12
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 13
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 14
     cmd:
     - ''
     exec_type: false
+    exec_type2: false
   - name: コマンド 15
     cmd:
     - ''
     exec_type: false
+    exec_type2: false

@@ -22,25 +22,6 @@ BACKUP_FOLDER = "backup"
 CONFIG_FILENAME = "config.yaml"
 DEFAULT_CONFIG = (6, 4, 4)
 
-# メモ
-# 不具合の原因の殆どが各ウィジェットのconfig依存の変数の更新忘れだった。
-# これはミュータブルを利用して、各ウィジェットでconfigを直接書き込む方法に便ったため、
-# config依存のイミュータブル変数の更新忘れを誘発させてしまったことだと考えている
-# configはmain_frmで完全一元管理し、configが変われば、関係するウィジェットの変数を更新する
-# といった流れを取れば、ミュータブルやイミュータブルに無関係に更新することができ、
-# このような不具合を低減できたかもしれない
-# また、ウィジェットがトップダウンの一方の単純なものだけでなく、フィードバックする場合、
-# 親ウィジェットの関数呼び出しが、masterで強引に呼び出したのも不味いと感じた
-# ノードが2以上離れた者同士の関数の呼び出しについて、もう少しいい方法が無かったのかと反省する
-# 特に親ノードを仲介する者同氏のやり取りにも同様に考える必要がある
-# 管理用のダミーウィジェットを間に持たせるやり方などいいかもしれない
-# 複数の子ウィジェット依存の変数を中継地点として、統合し、親ウィジェットに渡す（データ管理に特化するもの）
-# などと考えたが、ウィジェットではなく、そのような変数のみを管理する個別クラスを用意したほうがいいと思った
-# この個別クラスがアクセスしやすいようにすれば、ウィジェットの親子関係を意識することはなくなるかもしれない
-# また、ウィジェットはデータクラスを更新する入力、出力として扱うことで、ウィジェットにデータを分散させず、
-# データクラスで完全に一元管理できればと思う
-# そのために、ウィジェットにコールバック関数をバインドするため、 データクラスはstaticである必要がありそうだ
-
 def init_tab_config(size, tab_name):
     width, height = size
     tab_data = {}
@@ -52,6 +33,7 @@ def init_tab_config(size, tab_name):
             btn_data["name"] = 'コマンド {}'.format(width * y + x)
             btn_data["cmd"] = [""]
             btn_data["exec_type"] = False
+            btn_data["exec_type2"] = False
             tab_data["btn_list"].append(btn_data)
     return tab_data
             
@@ -120,6 +102,17 @@ def reshape_config(config):
             reshape_config["data"][tab_idx]["btn_list"][btn_idx] = config["data"][tab_idx]["btn_list"][btn_idx]
     return reshape_config
 
+def add_config(config):
+    # アップデートで追加された設定変数を古いセーブデータに追加
+    
+    # exec_type2 の互換性
+    for tab_idx in range(len((config["data"]))):
+        for btn_idx in range(len(config["data"][tab_idx]["btn_list"])):
+            if "exec_type2" not in config["data"][tab_idx]["btn_list"][btn_idx].keys():
+                config["data"][tab_idx]["btn_list"][btn_idx]["exec_type2"] = False
+    
+    return config
+
 class MainWindow(Tk):
     def __init__(self):
         super().__init__()
@@ -173,6 +166,7 @@ class main_frm(Frame):
         is_exist_config = os.path.isfile(CONFIG_FILENAME)
         if is_exist_config:
             self.config = LoadYaml(CONFIG_FILENAME)
+            add_config(self.config)
             time_str = get_current_datetime_string()
             backup_path = os.path.join(BACKUP_FOLDER, time_str+ "_" + CONFIG_FILENAME)
             SaveYaml(backup_path, self.config)
@@ -473,6 +467,7 @@ class tab_frm(Frame):
         self.data[btn_id]["name"]       = btn_data["name"]
         self.data[btn_id]["cmd"]        = btn_data["cmd"]
         self.data[btn_id]["exec_type"]  = btn_data["exec_type"]
+        self.data[btn_id]["exec_type2"] = btn_data["exec_type2"]
 
     def update_tab_data(self, tab_data):
         for btn_id, btn_data in enumerate(tab_data["btn_list"]):
@@ -489,7 +484,7 @@ class tab_frm(Frame):
             print("コマンドが登録されていません")
             return
 
-        process_exec_cmd(cmd_list, is_parallel=self.data[btn_id]["exec_type"])
+        process_exec_cmd(cmd_list, is_parallel=self.data[btn_id]["exec_type"], is_background = self.data[btn_id]["exec_type2"])
             
 def set_window_size(win, size):
     h,w = size

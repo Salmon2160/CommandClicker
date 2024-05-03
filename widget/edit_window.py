@@ -76,16 +76,34 @@ class edit_window(Toplevel):
         self.btn_name_entry.insert(0, self.edit_data["name"])
         self.btn_name_entry.grid(column=1, row=0, sticky=input_sticky)
         
+        # 実行コマンドの実行形式のフォーム
+        exec_frm = Frame(
+            setting_frm,
+            # relief="ridge",
+            # borderwidth=2,
+        )
+        exec_frm.grid(column=1, row=1, sticky=(W, E))
+        
         # 実行コマンドの入力形式のチェックボックス
         self.checkbox_var = BooleanVar()
         self.cmd_type_checkbox = Checkbutton(
-            setting_frm,
+            exec_frm,
             text="並列実行",
             variable=self.checkbox_var,
             font = DEFAULT_FONT
         )
-        self.cmd_type_checkbox.grid(column=1, row=1, sticky=(W, E))
+        self.cmd_type_checkbox.grid(column=0, row=0, sticky=(W, E))
         self.checkbox_var.set(self.edit_data["exec_type"])
+        
+        self.checkbox_var2 = BooleanVar()
+        self.cmd_type_checkbox2 = Checkbutton(
+            exec_frm,
+            text="背面実行",
+            variable=self.checkbox_var2,
+            font = DEFAULT_FONT
+        )
+        self.cmd_type_checkbox2.grid(column=1, row=0, sticky=(W, E))
+        self.checkbox_var2.set(self.edit_data["exec_type2"])
 
         # 実行コマンドの入力
         self.btn_cmd_entry = ScrolledText(
@@ -149,6 +167,7 @@ class edit_window(Toplevel):
         self.edit_data["name"] = name
         self.edit_data["cmd"] = self.get_cmd_entry()
         self.edit_data["exec_type"] = self.checkbox_var.get()
+        self.edit_data["exec_type2"] = self.checkbox_var2.get()
         
         self.master.master.master.master.save_config()
         
@@ -160,6 +179,9 @@ class edit_window(Toplevel):
             return True
             
         if self.checkbox_var.get() != self.edit_data["exec_type"]:
+            return True
+        
+        if self.checkbox_var2.get() != self.edit_data["exec_type2"]:
             return True
         
         return False
@@ -181,4 +203,4 @@ class edit_window(Toplevel):
         if len(cmd_list) == 0:
             print("コマンドが登録されていません")
             return
-        process_exec_cmd(cmd_list, is_parallel = self.checkbox_var.get())
+        process_exec_cmd(cmd_list, is_parallel = self.checkbox_var.get(), is_background = self.checkbox_var2.get())

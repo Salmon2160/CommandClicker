@@ -37,8 +37,10 @@ def SaveYaml(path, dic):
                 )
    
 # - encoding = 'utf-8', 'shiftjis'
-def exec_cmd(cmd_list, encoding = 'shiftjis', is_parallel = True):
+def exec_cmd(cmd_list, encoding = 'shiftjis', is_parallel = True, is_background = False):
     start = "start "
+    if is_background:
+        start += " /b "       
     prefix = "cmd /c "
     # prefix = "cmd /k " # for debug
     suffix = " && "
@@ -69,9 +71,9 @@ def exec_cmd(cmd_list, encoding = 'shiftjis', is_parallel = True):
         process_list.append(process)
         print("> " + cmd)
             
-def process_exec_cmd(cmd_list, encoding = 'shiftjis', is_parallel = True):
+def process_exec_cmd(cmd_list, encoding = 'shiftjis', is_parallel = True, is_background = False):
     # 子プロセスを途中で終了させたい場合, Arrayによる管理が必要
-    process = Process(target=exec_cmd, args=(cmd_list, encoding, is_parallel))
+    process = Process(target=exec_cmd, args=(cmd_list, encoding, is_parallel, is_background))
     process.start()
     return process
             
