@@ -40,7 +40,7 @@ def SaveYaml(path, dic):
 def exec_cmd(cmd_list, encoding = 'shiftjis', is_parallel = True, is_background = False):
     start = "start "
     if is_background:
-        start += " /b "       
+        start += "/b "       
     prefix = "cmd /c "
     # prefix = "cmd /k " # for debug
     suffix = " && "
