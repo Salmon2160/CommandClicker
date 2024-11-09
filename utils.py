@@ -104,3 +104,32 @@ class Singleton(type):
     
     def IsValid(cls):
         return cls in cls.instances.keys()
+    
+class ClipBoard(metaclass=Singleton):
+
+    tab_data = None
+    btn_data = None
+
+    def __init__(self):
+        if not Singleton.IsValid(self.__class__):
+            pass
+    
+    def SetTabData(self, tab_idx):        
+        from config.config import ConfigManager
+        self.tab_data = ConfigManager().GetTabData(tab_idx)
+        
+    def GetTabData(self):
+        return self.tab_data
+
+    def IsValidTabData(self):
+        return self.tab_data is not None
+    
+    def SetBtnData(self, tab_idx, btn_idx):
+        from config.config import ConfigManager
+        self.btn_data = ConfigManager().GetBtnData(tab_idx, btn_idx)
+        
+    def GetBtnData(self):
+        return self.btn_data
+    
+    def IsValidBtnData(self):
+        return self.btn_data is not None

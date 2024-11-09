@@ -2,6 +2,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 
+from utils import *
 from config.config import ConfigManager
 
 try:
@@ -92,7 +93,7 @@ class CustomNotebook(ttk.Notebook):
         self._active = None
         self.drag_tab = None
         
-        self.pmenu = None
+        self.menu = None
 
         self.bind("<ButtonPress-1>", self.on_close_press, True)
         self.bind("<ButtonRelease-1>", self.on_close_release)
@@ -114,56 +115,56 @@ class CustomNotebook(ttk.Notebook):
         self.reset_drag()
 
         # タブメニューを表示
-        pmenu = tk.Menu(self, tearoff=0)
+        menu = tk.Menu(self, tearoff=0)
         
         self.tab_rename_key = "タブ名の変更"
-        pmenu.add_command(
+        menu.add_command(
             label=self.tab_rename_key,
             command=self.press_menu(tab_index, self.tab_rename_key),
             font=DEFAULT_FONT,
             )
         
         self.tab_copy_key = "タブをコピー"
-        pmenu.add_command(
+        menu.add_command(
             label=self.tab_copy_key,
             command=self.press_menu(tab_index, self.tab_copy_key),
             font=DEFAULT_FONT,
             )
         
         self.tab_paste_key = "タブを貼り付け"
-        pmenu.add_command(
+        menu.add_command(
             label=self.tab_paste_key,
             command=self.press_menu(tab_index, self.tab_paste_key),
             font=DEFAULT_FONT,
             )
-        if not self.master.master.is_valid_clipboard_tab_data():
-            pmenu.entryconfig(self.tab_paste_key, state="disabled")
+        if not ClipBoard().IsValidTabData():
+            menu.entryconfig(self.tab_paste_key, state="disabled")
         
-        pmenu.add_separator()
+        menu.add_separator()
         
         self.tab_add_key = "タブを追加"
-        pmenu.add_command(
+        menu.add_command(
             label=self.tab_add_key,
             command=self.press_menu(tab_index, self.tab_add_key),
             font=DEFAULT_FONT,
             )
         
         self.tab_remove_key = "タブを削除"
-        pmenu.add_command(
+        menu.add_command(
             label=self.tab_remove_key,
             command=self.press_menu(tab_index, self.tab_remove_key),
             font=DEFAULT_FONT,
             )
         
-        pmenu.add_separator()
-        pmenu.add_command(
+        menu.add_separator()
+        menu.add_command(
             label="閉じる",
             font=DEFAULT_FONT,
             )
         x, y = event.x_root, event.y_root
-        pmenu.post(x, y)
+        menu.post(x, y)
         
-        self.pmenu = pmenu
+        self.menu = menu
         
     def rename_tab(self, tab_index):
         new_name = CustomDialog(
@@ -179,32 +180,38 @@ class CustomNotebook(ttk.Notebook):
     def remove_tab(self, tab_index):
         self.forget(tab_index)
         self.event_generate("<<NotebookTabClosed>>")
-        self.master.master.remove_tab(tab_index)
+        ConfigManager().RemoveTabData(tab_index)
+        ConfigManager().SaveConfig()
 
     def add_tab(self, tab_index):
+        # 循環参照するので、局所インポート
+        from CommandClicker import tab_frm
+        
         tab_count = self.index("end")
         if tab_count >= self.tab_num:
             return
         
         tab_name = "タブ {}".format(tab_index)
-        self.master.master.add_tab(tab_index, tab_name)
-        tab_frm = self.master.master.get_tab(tab_index)
+        ConfigManager().AddTabData(tab_index, tab_name)
+        ConfigManager().SaveConfig()
+        tab = tab_frm(self, tab_index)
         if tab_count == tab_index:
-            self.add(tab_frm, text=tab_name, padding=5)
+            self.add(tab, text=tab_name, padding=5)
         else:
-            self.insert(tab_index, tab_frm, text=tab_name, padding=5)
+            self.insert(tab_index, tab, text=tab_name, padding=5)
     
     def press_menu(self, tab_index, label):        
         def _press_menu():
             if label == self.tab_rename_key:
                 self.rename_tab(tab_index)
             elif label == self.tab_copy_key:
-                self.master.master.set_clipboard_tab_data(tab_index)
+                ClipBoard().SetTabData(tab_index)
             elif label == self.tab_paste_key:
-                if not self.master.master.is_valid_clipboard_tab_data():
+                if not ClipBoard().IsValidTabData():
                     return
-                tab_data = self.master.master.get_clipboard_tab_data()
-                self.master.master.get_tab(tab_index).update_tab_data(tab_data)
+                tab_data = ClipBoard().GetTabData()
+                tab_frm = self.nametowidget(self.tabs()[tab_index])
+                tab_frm.update_tab_data(tab_data)
                 self.tab(tab_index, text=tab_data["name"])
                 ConfigManager().SetTabData(tab_index, tab_name = tab_data["name"])
                 ConfigManager().SaveConfig()
@@ -281,7 +288,7 @@ class CustomNotebook(ttk.Notebook):
 
             source_tab = self.nametowidget(self.tabs()[source_index])
             self.insert(target_index, source_tab,  text=source_name, padding=5)
-            self.master.master.insert_tab(source_index, target_index)
+            ConfigManager().SwapTabData(source_index, target_index)
             ConfigManager().SaveConfig()
             return
     

@@ -43,9 +43,6 @@ class main_frm(Frame):
         super().__init__(master=master)
         self.master = master
         self.grid(column=0, row=0, sticky=(N, S, W, E))
-        
-        self.clipboard_btn_data = None
-        self.clipboard_tab_data = None
 
         self.make_widget()
         
@@ -74,9 +71,8 @@ class main_frm(Frame):
             )
         self.base_tab.grid(column=0, row=0, sticky=(N, S, W, E))
         
-        self.tab_list = []
         for idx in range(ConfigManager().GetTabNum()):
-            tab = self.make_tab_frm(idx)
+            tab = tab_frm(self.base_tab, idx)
             tab.grid(column=0, row=0, sticky=(N, S, W, E))
             
             self.base_tab.add(
@@ -84,65 +80,6 @@ class main_frm(Frame):
                 text=ConfigManager().GetTabName(idx),
                 padding=5,
                 )
-
-            self.tab_list.append(tab)
-            
-    def make_tab_frm(self, idx):
-        return tab_frm(self.base_tab, idx)
-        
-    def remove_tab(self, tab_idx):
-        ConfigManager().RemoveTabData(tab_idx)
-        ConfigManager().SaveConfig()
-        
-        self.tab_list.pop(tab_idx)
-        self.update_tab_id()
-        
-    def add_tab(self, tab_idx, tab_name, tab_data = None):
-        ConfigManager().AddTabData(tab_idx, tab_name, tab_data)
-        ConfigManager().SaveConfig()
-        
-        self.tab_list.insert(tab_idx, self.make_tab_frm(tab_idx))
-        self.update_tab_id()
-     
-    def insert_tab(self, from_idx, to_idx):
-        if from_idx == to_idx:
-            return
-
-        ConfigManager().SwapTabData(from_idx, to_idx)
-        ConfigManager().SaveConfig()
-        
-        if from_idx < to_idx:
-            self.tab_list.insert(to_idx + 1, self.tab_list[from_idx])
-            self.tab_list.pop(from_idx)
-        else:
-            self.tab_list.insert(to_idx, self.tab_list[from_idx])
-            self.tab_list.pop(from_idx + 1)
-        self.update_tab_id()
-       
-    def is_valid_clipboard_btn_data(self):
-        return self.clipboard_btn_data is not None
-    
-    def get_clipboard_btn_data(self):
-        return self.clipboard_btn_data
-    
-    def set_clipboard_btn_data(self, tab_id, btn_id):
-        self.clipboard_btn_data = ConfigManager().GetBtnData(tab_id, btn_id)
-        
-    def is_valid_clipboard_tab_data(self):
-        return self.clipboard_tab_data is not None
-    
-    def get_clipboard_tab_data(self):
-        return self.clipboard_tab_data
-    
-    def set_clipboard_tab_data(self, tab_id):
-        self.clipboard_tab_data = ConfigManager().GetTabData(tab_id)
-        
-    def get_tab(self, tab_id):
-        return self.tab_list[tab_id]
-    
-    def update_tab_id(self):
-        for idx, tab in enumerate(self.tab_list):
-            tab.id = idx            
         
 class CustomButton(Button):
     def __init__(self, master=None, id=None, **kwargs):
@@ -283,38 +220,38 @@ class tab_frm(Frame):
                     return
 
                 # ポップメニューを表示
-                pmenu = Menu(btn, tearoff=0)
+                menu = Menu(btn, tearoff=0)
                 self.btn_edit_key = "編集"
-                pmenu.add_command(
+                menu.add_command(
                     label=self.btn_edit_key,
                     command=self.press_menu(btn, self.btn_edit_key),
                     font=DEFAULT_FONT,
                     )
                 
                 self.btn_copy_key = "コピー"
-                pmenu.add_command(
+                menu.add_command(
                     label=self.btn_copy_key,
                     command=self.press_menu(btn, self.btn_copy_key),
                     font=DEFAULT_FONT,
                     )
                 
                 self.btn_paste_key = "貼り付け"
-                pmenu.add_command(
+                menu.add_command(
                     label=self.btn_paste_key,
                     command=self.press_menu(btn, self.btn_paste_key),
                     font=DEFAULT_FONT,
                     )
-                if not self.master.master.master.is_valid_clipboard_btn_data():
-                    pmenu.entryconfig(self.btn_paste_key, state="disabled")
+                if not ClipBoard().IsValidBtnData():
+                    menu.entryconfig(self.btn_paste_key, state="disabled")
 
-                pmenu.add_separator()
+                menu.add_separator()
                 
-                pmenu.add_command(
+                menu.add_command(
                     label="閉じる",
                     font=DEFAULT_FONT,
                     )
                 x, y = event.x_root, event.y_root
-                pmenu.post(x, y)
+                menu.post(x, y)
         else:
             # ボタンをドラッグ中の場合は交換
             if self.move_btn is not None:
@@ -326,11 +263,11 @@ class tab_frm(Frame):
             if label == self.btn_edit_key:
                 edit_window(self, self.id, btn)
             elif label == self.btn_copy_key:
-                self.master.master.master.set_clipboard_btn_data(self.id, btn.id)
+                ClipBoard().SetBtnData(self.id, btn.id)
             elif label == self.btn_paste_key:
-                if not self.master.master.master.is_valid_clipboard_btn_data():
+                if not ClipBoard().IsValidBtnData():
                     return
-                btn_data = self.master.master.master.get_clipboard_btn_data()
+                btn_data = ClipBoard().GetBtnData()
                 btn["text"] = btn_data["name"]
                 self.update_btn_data(btn.id, btn_data)
                 ConfigManager().SaveConfig()
@@ -366,8 +303,11 @@ def set_window_size(win, size):
     
 def main():
     
-     # 設定ファイルをロードして、復元
+    # 設定ファイルをロードして、復元
     ConfigManager()
+    
+    # クリップボードを有効化
+    ClipBoard()
 
     # メインウィンドウの設定
     main_win = MainWindow()
