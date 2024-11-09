@@ -4,15 +4,17 @@ from tkinter import messagebox
 from tkinter.scrolledtext import ScrolledText
 
 from utils import *
+from config.config import ConfigManager
 
 DEFAULT_FONT=("", 12)
 
 class edit_window(Toplevel):
-    def __init__(self, master, edit_btn, edit_data):
+    def __init__(self, master, edit_tab_idx, edit_btn):
         self.master = master
         super().__init__(master=master)
+        self.edit_tab_idx = edit_tab_idx
         self.edit_btn = edit_btn
-        self.edit_data = edit_data
+        self.edit_data = ConfigManager().GetBtnData(self.edit_tab_idx , self.edit_btn.get_id())
         
         self.make_widget()
         
@@ -28,6 +30,7 @@ class edit_window(Toplevel):
         self.focus_force()
 
     def make_widget(self):
+
         def _on_closing():  # ウィンドウの右上の✖アイコンから閉じるときの処理（ウィンドウを閉じる処理を書き換える）
             if self.is_change_entry():
                 # 保存するかどうかの確認ダイアログを表示
@@ -169,7 +172,8 @@ class edit_window(Toplevel):
         self.edit_data["exec_type"] = self.checkbox_var.get()
         self.edit_data["exec_type2"] = self.checkbox_var2.get()
         
-        self.master.master.master.master.save_config()
+        ConfigManager().SetBtnData(self.edit_tab_idx, self.edit_btn.get_id(), self.edit_data)
+        ConfigManager().SaveConfig()
         
     def is_change_entry(self):
         if self.btn_name_entry.get() != self.edit_data["name"]:

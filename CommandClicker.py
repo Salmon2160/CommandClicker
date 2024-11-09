@@ -15,103 +15,9 @@ from widget.custom_notebook import CustomNotebook
 from widget.edit_window import edit_window
 
 from utils import *
+from config.config import ConfigManager
 
 DEFAULT_FONT=("", 12)
-
-BACKUP_FOLDER = "backup"
-CONFIG_FILENAME = "config.yaml"
-DEFAULT_CONFIG = (6, 4, 4)
-
-def init_tab_config(size, tab_name):
-    width, height = size
-    tab_data = {}
-    tab_data["name"] = tab_name
-    tab_data["btn_list"] = []
-    for y in range(height):
-        for x in range(width):
-            btn_data = {}
-            btn_data["name"] = 'コマンド {}'.format(width * y + x)
-            btn_data["cmd"] = [""]
-            btn_data["exec_type"] = False
-            btn_data["exec_type2"] = False
-            tab_data["btn_list"].append(btn_data)
-    return tab_data
-            
-def init_config(tab_num, size):
-    config = {}
-    config["tab_num"] = tab_num
-    config["btn_size"] = list(size)
-    config["data"] = []
-    width, height = size
-       
-    for tab_idx in range(tab_num):
-        tab_data = init_tab_config(size, 'タブ {}'.format(tab_idx))
-        config["data"].append(tab_data)
-    return config
-
-def is_valid_size(config):
-    tab_num = config["tab_num"]
-    w, h = config["btn_size"]
-    data = config["data"]
-    
-    if tab_num <= 0:
-        return False
-    
-    if w * h <= 0:
-        return False
-    
-    if type(data) != list:
-        return False
-    
-    if len(data) == 0:
-        return False
-    
-    for tab_idx in range(len(data)):
-        if len(data[tab_idx]["btn_list"]) == 0:
-            return False
-    
-    return True
-
-def is_valid_config(config):
-    tab_num = config["tab_num"]
-    w, h = config["btn_size"]
-    data = config["data"]
-    
-    if len(data) > tab_num:
-        return False
-
-    for tab_idx in range(len(data)):
-        if len(data[tab_idx]["btn_list"]) != w * h:
-            return False
-    
-    return True
-
-def reshape_config(config):
-    tab_num = config["tab_num"]
-    w, h = config["btn_size"]
-    btn_num = w * h
-    
-    cur_tab_num = len(config["data"])
-    
-    reshape_config = init_config(tab_num, (w, h))
-    for tab_idx in range(min(tab_num, cur_tab_num)):
-        reshape_config["data"][tab_idx]["name"] = config["data"][tab_idx]["name"]
-        
-        cur_btn_num = len(config["data"][tab_idx]["btn_list"])
-        for btn_idx in range(min(btn_num, cur_btn_num)):
-            reshape_config["data"][tab_idx]["btn_list"][btn_idx] = config["data"][tab_idx]["btn_list"][btn_idx]
-    return reshape_config
-
-def add_config(config):
-    # アップデートで追加された設定変数を古いセーブデータに追加
-    
-    # exec_type2 の互換性
-    for tab_idx in range(len((config["data"]))):
-        for btn_idx in range(len(config["data"][tab_idx]["btn_list"])):
-            if "exec_type2" not in config["data"][tab_idx]["btn_list"][btn_idx].keys():
-                config["data"][tab_idx]["btn_list"][btn_idx]["exec_type2"] = False
-    
-    return config
 
 class MainWindow(Tk):
     def __init__(self):
@@ -138,7 +44,6 @@ class main_frm(Frame):
         self.master = master
         self.grid(column=0, row=0, sticky=(N, S, W, E))
         
-        self.config = None
         self.clipboard_btn_data = None
         self.clipboard_tab_data = None
 
@@ -161,67 +66,41 @@ class main_frm(Frame):
             padding=(10, 5), 
             borderwidth = 30,
             )
-        
-        # 設定ファイルをロードして、復元
-        is_exist_config = os.path.isfile(CONFIG_FILENAME)
-        if is_exist_config:
-            self.config = LoadYaml(CONFIG_FILENAME)
-            add_config(self.config)
-            time_str = get_current_datetime_string()
-            backup_path = os.path.join(BACKUP_FOLDER, time_str+ "_" + CONFIG_FILENAME)
-            SaveYaml(backup_path, self.config)
-        
-        # 設定ファイルがない又は、設定ファイルのサイズ設定が不正の場合は新規作成
-        if not is_exist_config or not is_valid_size(self.config):
-            tab_num, width, height = DEFAULT_CONFIG
-            self.config = init_config(tab_num, (width, height))
-            SaveYaml(CONFIG_FILENAME, self.config)
-            
-        if not is_valid_config(self.config):
-            self.config = reshape_config(self.config)
-            SaveYaml(CONFIG_FILENAME, self.config)
 
         self.base_tab = CustomNotebook(
             self.base_frm,
             image_size = (9, 9),
-            tab_num = self.config["tab_num"]
+            tab_num = ConfigManager().GetMaxTabNum()
             )
         self.base_tab.grid(column=0, row=0, sticky=(N, S, W, E))
         
         self.tab_list = []
-        for idx in range(len(self.config["data"])):
+        for idx in range(ConfigManager().GetTabNum()):
             tab = self.make_tab_frm(idx)
             tab.grid(column=0, row=0, sticky=(N, S, W, E))
             
             self.base_tab.add(
                 tab,
-                text=self.config["data"][idx]["name"],
+                text=ConfigManager().GetTabName(idx),
                 padding=5,
                 )
 
             self.tab_list.append(tab)
             
     def make_tab_frm(self, idx):
-        return tab_frm(self.base_tab, idx, self.config["btn_size"], self.config["data"][idx]["btn_list"])
-
-    def save_config(self):
-        SaveYaml(CONFIG_FILENAME, self.config)
-        
-    def set_tab_data(self, tab_idx, tab_name = None, btn_list = None):
-        if tab_name is not None:
-            self.config["data"][tab_idx]["name"] = tab_name
-        if btn_list is not None:
-            self.config["data"][tab_idx]["btn_list"] = btn_list
+        return tab_frm(self.base_tab, idx)
         
     def remove_tab(self, tab_idx):
-        self.config["data"].pop(tab_idx)
+        ConfigManager().RemoveTabData(tab_idx)
+        ConfigManager().SaveConfig()
+        
         self.tab_list.pop(tab_idx)
         self.update_tab_id()
         
     def add_tab(self, tab_idx, tab_name, tab_data = None):
-        if tab_data is None:
-            tab_data = init_tab_config(self.config["btn_size"], tab_name)
-        self.config["data"].insert(tab_idx, tab_data)
+        ConfigManager().AddTabData(tab_idx, tab_name, tab_data)
+        ConfigManager().SaveConfig()
+        
         self.tab_list.insert(tab_idx, self.make_tab_frm(tab_idx))
         self.update_tab_id()
      
@@ -229,21 +108,17 @@ class main_frm(Frame):
         if from_idx == to_idx:
             return
 
-        data = self.config["data"]
+        ConfigManager().SwapTabData(from_idx, to_idx)
+        ConfigManager().SaveConfig()
+        
         if from_idx < to_idx:
-            data.insert(to_idx + 1, data[from_idx])
-            data.pop(from_idx)
-            
             self.tab_list.insert(to_idx + 1, self.tab_list[from_idx])
             self.tab_list.pop(from_idx)
         else:
-            data.insert(to_idx, data[from_idx])
-            data.pop(from_idx + 1)
-            
             self.tab_list.insert(to_idx, self.tab_list[from_idx])
             self.tab_list.pop(from_idx + 1)
         self.update_tab_id()
-        
+       
     def is_valid_clipboard_btn_data(self):
         return self.clipboard_btn_data is not None
     
@@ -251,7 +126,7 @@ class main_frm(Frame):
         return self.clipboard_btn_data
     
     def set_clipboard_btn_data(self, tab_id, btn_id):
-        self.clipboard_btn_data = copy.deepcopy(self.config["data"][tab_id]["btn_list"][btn_id])
+        self.clipboard_btn_data = ConfigManager().GetBtnData(tab_id, btn_id)
         
     def is_valid_clipboard_tab_data(self):
         return self.clipboard_tab_data is not None
@@ -260,7 +135,7 @@ class main_frm(Frame):
         return self.clipboard_tab_data
     
     def set_clipboard_tab_data(self, tab_id):
-        self.clipboard_tab_data = copy.deepcopy(self.config["data"][tab_id])
+        self.clipboard_tab_data = ConfigManager().GetTabData(tab_id)
         
     def get_tab(self, tab_id):
         return self.tab_list[tab_id]
@@ -273,6 +148,9 @@ class CustomButton(Button):
     def __init__(self, master=None, id=None, **kwargs):
         super().__init__(master, **kwargs)
         self.id = id
+        
+    def get_id(self):
+        return self.id
         
 class CustomButtonToplevel(Toplevel):
     def __init__(self, master, btn_name, pos):
@@ -312,27 +190,24 @@ class CustomButtonToplevel(Toplevel):
         
 class tab_frm(Frame):
 
-    def __init__(self, master, id, size, data):
+    def __init__(self, master, id):
         super().__init__(
             master=master,
             relief="ridge",
             )
         self.id = id
-        self.size = size
-        self.data = data
-        
         self.move_btn = None
-        
         self.make_widget()
         
     def make_widget(self):
-        width, height = self.size
+        width, height = ConfigManager().GetBtnSize()
 
         self.btn_list = []
+        btn_list = ConfigManager().GetBtnList(self.id)
         for y in range(height):
             for x in range(width):
                btn_id = width * y + x
-               btn_data = self.data[btn_id]
+               btn_data = btn_list[btn_id]
                
                btn = CustomButton(
                 self,
@@ -382,8 +257,8 @@ class tab_frm(Frame):
         
         # 入れ替え
         source_btn["text"], target_btn["text"] = target_btn["text"], source_btn["text"]
-        self.data[source_idx], self.data[target_idx] = self.data[target_idx], self.data[source_idx]
-        self.master.master.master.save_config()
+        ConfigManager().SwapBtnData(self.id, source_idx, target_idx)
+        ConfigManager().SaveConfig()
         
     def reset_move_button(self):
         if self.move_btn is not None:
@@ -449,7 +324,7 @@ class tab_frm(Frame):
     def press_menu(self, btn, label):        
         def _press_menu():
             if label == self.btn_edit_key:
-                edit_window(self, btn, self.data[btn.id])
+                edit_window(self, self.id, btn)
             elif label == self.btn_copy_key:
                 self.master.master.master.set_clipboard_btn_data(self.id, btn.id)
             elif label == self.btn_paste_key:
@@ -458,33 +333,31 @@ class tab_frm(Frame):
                 btn_data = self.master.master.master.get_clipboard_btn_data()
                 btn["text"] = btn_data["name"]
                 self.update_btn_data(btn.id, btn_data)
-                self.master.master.master.save_config()
+                ConfigManager().SaveConfig()
                 
         return _press_menu
     
     def update_btn_data(self, btn_id, btn_data):
         self.btn_list[btn_id]["text"]   = btn_data["name"]
-        self.data[btn_id]["name"]       = btn_data["name"]
-        self.data[btn_id]["cmd"]        = btn_data["cmd"]
-        self.data[btn_id]["exec_type"]  = btn_data["exec_type"]
-        self.data[btn_id]["exec_type2"] = btn_data["exec_type2"]
+        ConfigManager().SetBtnData(self.id, btn_id, btn_data)
 
     def update_tab_data(self, tab_data):
         for btn_id, btn_data in enumerate(tab_data["btn_list"]):
             self.update_btn_data(btn_id, btn_data)
     
     def exec_btn_cmd(self, btn_id):
-        if btn_id >= len(self.data):
+        btn_list = ConfigManager().GetBtnList(self.id)
+        if btn_id >= len(btn_list):
             return
         
-        cmd_list = self.data[btn_id]["cmd"]
+        cmd_list = btn_list[btn_id]["cmd"]
         cmd_list = [cmd for cmd in cmd_list if cmd != ""]
         
         if len(cmd_list) == 0:
             print("コマンドが登録されていません")
             return
 
-        process_exec_cmd(cmd_list, is_parallel=self.data[btn_id]["exec_type"], is_background = self.data[btn_id]["exec_type2"])
+        process_exec_cmd(cmd_list, is_parallel=btn_list[btn_id]["exec_type"], is_background = btn_list[btn_id]["exec_type2"])
             
 def set_window_size(win, size):
     h,w = size
@@ -492,6 +365,10 @@ def set_window_size(win, size):
     win.rowconfigure(0, weight=1)       # 行についての重みを設定
     
 def main():
+    
+     # 設定ファイルをロードして、復元
+    ConfigManager()
+
     # メインウィンドウの設定
     main_win = MainWindow()
     main_win.title("Command Clicker")

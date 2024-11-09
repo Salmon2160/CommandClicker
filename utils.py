@@ -93,3 +93,14 @@ def get_current_datetime_string():
     now = datetime.datetime.now()
     formatted_datetime = now.strftime("%Y_%m_%d_%S")
     return formatted_datetime
+
+class Singleton(type):
+    instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls.instances:
+            cls.instances[cls] = super().__call__(*args, **kwargs)
+        return cls.instances[cls]
+    
+    def IsValid(cls):
+        return cls in cls.instances.keys()
