@@ -77,17 +77,21 @@ def process_exec_cmd(cmd_list, encoding = 'shiftjis', is_parallel = True, is_bac
     process.start()
     return process
             
-def is_valid_release(event):
-    # ディスプレイ座標系で比較
-
+def is_release_in_same_widget(event):
     widget = event.widget
+    
+    # アクティブではないなら何もしない（誤作動対策）
+    if not widget.focus_displayof():
+        return
+    
+    # ディスプレイ座標系で比較
     x1 = widget.winfo_rootx()
     y1 = widget.winfo_rooty()
     x2 = x1 + widget.winfo_width()
     y2 = y1 + widget.winfo_height()
 
     x, y = event.x_root, event.y_root
-    return (x1 <= x <= x2) and (y1 <= y <= y2)
+    return (x1 < x < x2) and (y1 < y < y2)
 
 def get_current_datetime_string():
     now = datetime.datetime.now()

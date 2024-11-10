@@ -184,7 +184,7 @@ class tab_frm(Frame):
             x2 = x1 + target_btn.winfo_width()
             y2 = y1 + target_btn.winfo_height()
 
-            if (x1 <= x <= x2) and (y1 <= y <= y2):
+            if (x1 < x < x2) and (y1 < y < y2):
                 target_idx = target_btn.id
                 
         if target_idx is None:
@@ -206,7 +206,18 @@ class tab_frm(Frame):
     def release_button(self, event):
         btn = event.widget
         
-        if is_valid_release(event):
+        # ボタンをドラッグ中の場合
+        if self.move_btn is not None:
+            # 右クリックの場合
+            if event.num == 3:
+                # ボタンを交換
+                self.exchange_move_button(event) 
+                
+            # ドラックをキャンセル
+            self.reset_move_button()
+            return
+        
+        if is_release_in_same_widget(event):            
             # 左クリックの場合
             if event.num == 1:
                 # 設定されているコマンドを実行
@@ -214,11 +225,6 @@ class tab_frm(Frame):
         
             # 右クリックの場合
             if event.num == 3:
-                # ボタンをドラッグ中の場合は何もしない
-                if self.move_btn is not None:
-                    self.reset_move_button()
-                    return
-
                 # ポップメニューを表示
                 menu = Menu(btn, tearoff=0)
                 self.btn_edit_key = "編集"
@@ -252,11 +258,6 @@ class tab_frm(Frame):
                     )
                 x, y = event.x_root, event.y_root
                 menu.post(x, y)
-        else:
-            # ボタンをドラッグ中の場合は交換
-            if self.move_btn is not None:
-                self.exchange_move_button(event) 
-                self.reset_move_button()
             
     def press_menu(self, btn, label):        
         def _press_menu():
@@ -300,7 +301,7 @@ def set_window_size(win, size):
     h,w = size
     win.columnconfigure(0, weight=1)    # 列についての重みを決定
     win.rowconfigure(0, weight=1)       # 行についての重みを設定
-    
+
 def main():
     
     # 設定ファイルをロードして、復元

@@ -92,6 +92,7 @@ class CustomNotebook(ttk.Notebook):
 
         self._active = None
         self.drag_tab = None
+        self.press_index = None
         
         self.menu = None
 
@@ -99,15 +100,31 @@ class CustomNotebook(ttk.Notebook):
         self.bind("<ButtonRelease-1>", self.on_close_release)
         self.bind("<Motion>", self.on_close_motion, True)
         
+        self.bind("<ButtonPress-3>", self.on_tab_press)
         self.bind("<ButtonRelease-3>", self.on_tab_release)
         
     # タブ上で右クリック
+    def on_tab_press(self, event):
+        try:
+            self.press_index = self.index("@%d,%d" % (event.x, event.y))
+        except:
+            return
+        
+    # タブ上で右クリック
     def on_tab_release(self, event):
+        if self.press_index is None:
+            return
+        
+        press_index = self.press_index
+        self.press_index = None
         try:
             index = self.index("@%d,%d" % (event.x, event.y))
         except:
             return
         
+        if press_index != index:
+            return
+
         self.make_menu(event, index)
         
     def make_menu(self, event, tab_index):
